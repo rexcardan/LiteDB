@@ -14,7 +14,7 @@ namespace LiteDB
         private readonly EngineSettings _settings;
         private readonly Mutex _mutex;
         private LiteEngine _engine;
-        private int _stack = 0;
+        private bool _transactionRunning = false;
 
         public SharedEngine(EngineSettings settings)
         {
