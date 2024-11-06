@@ -1,12 +1,11 @@
-﻿using LiteDB.Engine;
+using LiteDB.Engine;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
-#if NETFRAMEWORK
 using System.Security.AccessControl;
 using System.Security.Principal;
-#endif
+using System.Threading;
+
 
 namespace LiteDB
 {
@@ -15,7 +14,7 @@ namespace LiteDB
         private readonly EngineSettings _settings;
         private readonly Mutex _mutex;
         private LiteEngine _engine;
-        private bool _transactionRunning = false;
+        private int _stack = 0;
 
         public SharedEngine(EngineSettings settings)
         {
@@ -25,17 +24,13 @@ namespace LiteDB
 
             try
             {
-#if NETFRAMEWORK
                 var allowEveryoneRule = new MutexAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null),
                            MutexRights.FullControl, AccessControlType.Allow);
 
                 var securitySettings = new MutexSecurity();
                 securitySettings.AddAccessRule(allowEveryoneRule);
-
-                _mutex = new Mutex(false, "Global\\" + name + ".Mutex", out _, securitySettings);
-#else
-                _mutex = new Mutex(false, "Global\\" + name + ".Mutex");
-#endif
+                _mutex = new Mutex(false, "Global\\" + name + ".Mutex", out _);
+                _mutex.SetAccessControl(securitySettings);
             }
             catch (NotSupportedException ex)
             {
